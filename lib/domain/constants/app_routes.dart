@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 
+import '../../ui/on_boarding/sign_up/signup_page.dart';
 import '../../ui/splash/splash_page.dart';
 
 class AppRoutes{
@@ -11,6 +12,7 @@ class AppRoutes{
 
   static Map<String, WidgetBuilder> mRoutes = {
     splash: (context) => SplashPage(),
+    signUp: (context) => SignUpPage(),
     /*login: (context) => LoginPage(),
     signUp: (context) => SignUpPage(),
     dashboard: (context) => DashboardPage(),*/
