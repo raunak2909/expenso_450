@@ -31,6 +31,16 @@ class UserBloc extends Bloc<UserEvent, UserState> {
       }
     });
 
-    on<AuthenticateUserEvent>((event, emit) {});
+    on<AuthenticateUserEvent>((event, emit) async {
+      emit(UserLoadingState());
+
+      bool check = await dbHelper.authenticateUser(email: event.email, pass: event.pass);
+
+      if(check){
+        emit(UserSuccessState());
+      } else {
+        emit(UserFailureState(errorMsg: "Invalid credentials!!"));
+      }
+    });
   }
 }

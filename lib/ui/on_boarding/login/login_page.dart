@@ -1,35 +1,30 @@
-import 'package:expenso_450/data/helper/db_helper.dart';
-import 'package:expenso_450/ui/on_boarding/bloc/user_bloc.dart';
+import 'package:expenso_450/domain/constants/app_routes.dart';
 import 'package:expenso_450/ui/on_boarding/bloc/user_event.dart';
-import 'package:expenso_450/ui/on_boarding/bloc/user_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../domain/constants/app_routes.dart';
+import '../bloc/user_bloc.dart';
+import '../bloc/user_state.dart';
 
-class SignUpPage extends StatefulWidget {
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
-  State<SignUpPage> createState() => _SignUpPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _SignUpPageState extends State<SignUpPage> {
+class _LoginPageState extends State<LoginPage> {
   var emailController = TextEditingController();
 
   var passController = TextEditingController();
 
-  var nameController = TextEditingController();
-
-  var mobNoController = TextEditingController();
-
-  var confirmPassController = TextEditingController();
-
   bool isPassVisible = false;
-  bool isConfirmPassVisible = false;
 
   bool isLoading = false;
 
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
+  bool isLogin = true;
 
   @override
   void initState() {
@@ -53,25 +48,6 @@ class _SignUpPageState extends State<SignUpPage> {
               SizedBox(height: 11),
               TextFormField(
                 validator: (value) {
-                  if (value != null && value.isEmpty) {
-                    return "Please enter your name..";
-                  } else {
-                    return null;
-                  }
-                },
-                controller: nameController,
-                decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.account_circle_outlined),
-                  labelText: "Name",
-                  hintText: "Enter name here..",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(21),
-                  ),
-                ),
-              ),
-              SizedBox(height: 11),
-              TextFormField(
-                validator: (value) {
                   RegExp emailRegExp = RegExp(
                     r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
                   );
@@ -90,29 +66,6 @@ class _SignUpPageState extends State<SignUpPage> {
                   prefixIcon: Icon(Icons.email_outlined),
                   labelText: "Email",
                   hintText: "Enter email here..",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(21),
-                  ),
-                ),
-              ),
-              SizedBox(height: 11),
-              TextFormField(
-                validator: (value) {
-                  if (value != null && value.isEmpty) {
-                    return "Please enter your mobile no..";
-                  } else if (value!.length != 10) {
-                    return "Please enter a valid mobile no..";
-                  } else {
-                    return null;
-                  }
-                },
-                controller: mobNoController,
-                decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.call_outlined),
-                  //prefixText: "+91",
-                  prefix: Text("+91  "),
-                  labelText: "Mobile No",
-                  hintText: "Enter mobile no here..",
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(21),
                   ),
@@ -154,43 +107,16 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
               ),
               SizedBox(height: 11),
-              TextFormField(
-                validator: (value) {
-                  if (value != null && value.isEmpty) {
-                    return "Please re-enter your password..";
-                  } else if(passController.text!=confirmPassController.text) {
-                    return "Password doesn't match..";
-                  } else {
-                    return null;
-                  }
-                },
-                obscureText: !isConfirmPassVisible,
-                controller: confirmPassController,
-                decoration: InputDecoration(
-                  suffixIcon: IconButton(
-                    onPressed: () {
-                      isConfirmPassVisible = !isConfirmPassVisible;
-                      setState(() {});
-                    },
-                    icon: Icon(
-                      isConfirmPassVisible
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                    ),
-                  ),
-                  prefixIcon: Icon(Icons.password_outlined),
-                  labelText: "Confirm password",
-                  hintText: "Enter confirm password here..",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(21),
-                  ),
-                ),
-              ),
-              SizedBox(height: 11),
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: BlocConsumer<UserBloc, UserState>(
+                  listenWhen: (ps, cs){
+                    return isLogin;
+                  },
+                  buildWhen: (ps, cs){
+                    return isLogin;
+                  },
                   listener: (context, state) {
                     if (state is UserLoadingState) {
                       isLoading = true;
@@ -198,10 +124,10 @@ class _SignUpPageState extends State<SignUpPage> {
 
                     if (state is UserSuccessState) {
                       isLoading = false;
-                      Navigator.pop(context);
+                      Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text("Account created successfully!!"),
+                          content: Text("Logged-in successfully!!"),
                           backgroundColor: Colors.green,
                         ),
                       );
@@ -224,12 +150,11 @@ class _SignUpPageState extends State<SignUpPage> {
                         foregroundColor: Colors.white,
                       ),
                       onPressed: () {
-                        if(formKey.currentState!.validate()){
+                        isLogin = true;
+                        if (formKey.currentState!.validate()) {
                           context.read<UserBloc>().add(
-                            CreateUserEvent(
+                            AuthenticateUserEvent(
                               email: emailController.text,
-                              mobNo: mobNoController.text,
-                              name: nameController.text,
                               pass: passController.text,
                             ),
                           );
@@ -260,13 +185,14 @@ class _SignUpPageState extends State<SignUpPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Already have an account?"),
+                  Text("Don't have an account?"),
                   TextButton(
                     onPressed: () {
-                      Navigator.pop(context);
+                      isLogin = false;
+                      Navigator.pushNamed(context, AppRoutes.signUp);
                     },
-                    child: Text("Login", style: TextStyle(
-                        fontWeight: FontWeight.bold
+                    child: Text("Sign Up", style: TextStyle(
+                      fontWeight: FontWeight.bold
                     ),),
                   ),
                 ],
