@@ -32,7 +32,7 @@ class DBHelper {
   static const String COLUMN_EXPENSE_REMARK = "e_remark";
   static const String COLUMN_EXPENSE_AMOUNT = "e_amt";
   static const String COLUMN_EXPENSE_CAT_ID = "e_cat_id";
-  static const String COLUMN_EXPENSE_TYPE = "e_type";
+  static const String COLUMN_EXPENSE_TYPE = "e_type"; /// 0=> Debit, 1=>Credit
   static const String COLUMN_EXPENSE_CREATED_AT = "e_created_at";
 
   Future<Database> initDB() async {
@@ -118,7 +118,10 @@ class DBHelper {
   }
 
   ///login
-  Future<bool> authenticateUser({required String email, required String pass}) async {
+  Future<bool> authenticateUser({
+    required String email,
+    required String pass,
+  }) async {
     var db = await initDB();
 
     List<Map<String, dynamic>> mUsers = await db.query(
@@ -127,7 +130,7 @@ class DBHelper {
       whereArgs: [email, pass],
     );
 
-    if(mUsers.isNotEmpty){
+    if (mUsers.isNotEmpty) {
       ///user is authenticated
       SharedPreferences prefs = await SharedPreferences.getInstance();
       prefs.setInt("uid", mUsers[0][COLUMN_USER_ID]);
@@ -137,6 +140,46 @@ class DBHelper {
   }
 
   ///add expense
+  Future<bool> addExpense({
+    required String title,
+    required String remark,
+    required double amt,
+    required int catId,
+    required int type,
+    required int createdAt,
+  }) async {
+    var db = await initDB();
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int uid = prefs.getInt("uid") ?? 0;
+
+    int rowsEffected = await db.insert(TABLE_EXPENSE, {
+      COLUMN_EXPENSE_TITLE: title,
+      COLUMN_EXPENSE_REMARK: remark,
+      COLUMN_EXPENSE_AMOUNT: amt,
+      COLUMN_EXPENSE_CAT_ID: catId,
+      COLUMN_EXPENSE_CREATED_AT: createdAt.toString(),
+      COLUMN_EXPENSE_TYPE: type,
+      COLUMN_USER_ID: uid,
+    });
+
+    return rowsEffected > 0;
+  }
+
+  ///fetch all expense
+  Future<List<Map<String, dynamic>>> fetchAllExpense() async {
+    var db = await initDB();
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int uid = prefs.getInt("uid") ?? 0;
+
+    return await db.query(
+      TABLE_EXPENSE,
+      where: "$COLUMN_USER_ID = ?",
+      whereArgs: ["$uid"],
+    );
+  }
+
   ///update expense
   ///delete expense
 }
