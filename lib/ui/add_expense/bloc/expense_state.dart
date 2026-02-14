@@ -1,9 +1,11 @@
+import 'package:expenso_450/data/models/expense_filter_model.dart';
+
 abstract class ExpenseState{}
 
 class ExpenseInitialState extends ExpenseState{}
 class ExpenseLoadingState extends ExpenseState{}
 class ExpenseLoadedState extends ExpenseState{
-  List<Map<String, dynamic>> mExpense;
+  List<ExpenseFilterModel> mExpense;
   ExpenseLoadedState({required this.mExpense});
 }
 class ExpenseErrorState extends ExpenseState{
