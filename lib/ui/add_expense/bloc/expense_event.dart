@@ -15,4 +15,7 @@ class AddExpenseEvent extends ExpenseEvent {
   });
 }
 
-class FetchInitialExpenseEvent extends ExpenseEvent {}
+class FetchInitialExpenseEvent extends ExpenseEvent {
+  int filterFlag;
+  FetchInitialExpenseEvent({this.filterFlag = 1});
+}
