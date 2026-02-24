@@ -139,6 +139,7 @@ class _HomePageState extends State<HomePage> {
                           return ListView.builder(
                             padding: EdgeInsets.zero,
                             shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
                             itemCount: state.mExpense.length,
                             itemBuilder: (_, index) {
                               ExpenseFilterModel eachFilterExp =
