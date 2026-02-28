@@ -20,3 +20,5 @@ class AuthenticateUserEvent extends UserEvent{
   });
 
 }
+
+class GetUserBalanceEvent extends UserEvent{}

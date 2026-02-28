@@ -32,7 +32,9 @@ class DBHelper {
   static const String COLUMN_EXPENSE_REMARK = "e_remark";
   static const String COLUMN_EXPENSE_AMOUNT = "e_amt";
   static const String COLUMN_EXPENSE_CAT_ID = "e_cat_id";
-  static const String COLUMN_EXPENSE_TYPE = "e_type"; /// 0=> Debit, 1=>Credit
+  static const String COLUMN_EXPENSE_TYPE = "e_type";
+
+  /// 0=> Debit, 1=>Credit
   static const String COLUMN_EXPENSE_CREATED_AT = "e_created_at";
 
   Future<Database> initDB() async {
@@ -139,6 +141,25 @@ class DBHelper {
     return mUsers.isNotEmpty;
   }
 
+  Future<double> getUserBalance() async {
+    var db = await initDB();
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int uid = prefs.getInt("uid") ?? 0;
+
+    List<Map<String, dynamic>> mUser = await db.query(
+      TABLE_USER,
+      where: "$COLUMN_USER_ID = ?",
+      whereArgs: ["$uid"],
+    );
+
+    if(mUser.isNotEmpty){
+      return mUser[0][COLUMN_USER_BALANCE];
+    } else {
+      return 0;
+    }
+  }
+
   ///add expense
   Future<bool> addExpense({
     required String title,
@@ -161,6 +182,43 @@ class DBHelper {
       COLUMN_EXPENSE_CREATED_AT: createdAt.toString(),
       COLUMN_EXPENSE_TYPE: type,
       COLUMN_USER_ID: uid,
+    });
+
+    if (rowsEffected > 0) {
+      bool isUpdated = await updateBalance(amt: amt, type: type);
+
+      if (isUpdated) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+
+  Future<bool> updateBalance({required double amt, required int type}) async {
+    var db = await initDB();
+    double currBal = 0;
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    int uid = prefs.getInt("uid") ?? 0;
+
+    List<Map<String, dynamic>> userData = await db.query(
+      TABLE_USER,
+      where: "$COLUMN_USER_ID = ?",
+      whereArgs: ["$uid"],
+    );
+    currBal = userData[0][COLUMN_USER_BALANCE];
+
+    if (type == 0) {
+      currBal -= amt;
+    } else {
+      currBal += amt;
+    }
+
+    int rowsEffected = await db.update(TABLE_USER, {
+      COLUMN_USER_BALANCE: currBal,
     });
 
     return rowsEffected > 0;

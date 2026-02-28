@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+import '../on_boarding/bloc/user_bloc.dart';
+import '../on_boarding/bloc/user_event.dart';
+
 class AddExpensePage extends StatefulWidget {
   @override
   State<AddExpensePage> createState() => _AddExpensePageState();
@@ -247,6 +250,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                         backgroundColor: Colors.green,
                       ),
                     );
+                    context.read<UserBloc>().add(GetUserBalanceEvent());
                     Navigator.pop(context);
                   }
                 },

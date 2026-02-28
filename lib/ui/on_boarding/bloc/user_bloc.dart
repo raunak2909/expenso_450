@@ -42,5 +42,14 @@ class UserBloc extends Bloc<UserEvent, UserState> {
         emit(UserFailureState(errorMsg: "Invalid credentials!!"));
       }
     });
+
+    on<GetUserBalanceEvent>((event, emit) async{
+      emit(UserLoadingState());
+
+      double balance = await dbHelper.getUserBalance();
+
+      emit(UserBalanceState(bal: balance));
+
+    });
   }
 }

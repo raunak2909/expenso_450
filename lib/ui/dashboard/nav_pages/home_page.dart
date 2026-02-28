@@ -6,6 +6,9 @@ import 'package:expenso_450/domain/constants/app_constants.dart';
 import 'package:expenso_450/ui/add_expense/bloc/expense_bloc.dart';
 import 'package:expenso_450/ui/add_expense/bloc/expense_event.dart';
 import 'package:expenso_450/ui/add_expense/bloc/expense_state.dart';
+import 'package:expenso_450/ui/on_boarding/bloc/user_bloc.dart';
+import 'package:expenso_450/ui/on_boarding/bloc/user_event.dart';
+import 'package:expenso_450/ui/on_boarding/bloc/user_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -31,6 +34,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     context.read<ExpenseBloc>().add(FetchInitialExpenseEvent());
+    context.read<UserBloc>().add(GetUserBalanceEvent());
   }
 
   @override
@@ -68,185 +72,254 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
             SizedBox(height: 11),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundImage: NetworkImage(
+                    "https://cdn-icons-png.flaticon.com/512/5556/5556499.png",
+                  ),
+                ),
+                SizedBox(width: 11),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 20,
-                          backgroundImage: NetworkImage(
-                            "https://cdn-icons-png.flaticon.com/512/5556/5556499.png",
-                          ),
-                        ),
-                        SizedBox(width: 11),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              "Morning",
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            Text(
-                              "Blakowski",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Spacer(),
-                        DropdownMenu(
-                          onSelected: (value){
-                            context.read<ExpenseBloc>().add(FetchInitialExpenseEvent(filterFlag: value??1));
-                          },
-                          trailingIcon: Icon(Icons.keyboard_arrow_down_rounded),
-                          inputDecorationTheme: InputDecorationThemeData(
-                            filled: true,
-                            fillColor: Color(0xffEEF2FD),
-                            border: OutlineInputBorder(
-                              borderSide: BorderSide.none
-                            )
-                          ),
-                          initialSelection: filterIndex,
-                            dropdownMenuEntries: List.generate(mFilters.length, (index){
-                              return DropdownMenuEntry(value: index+1, label: mFilters[index]);
-                            })
-
-
-                          /*mFilters.map((eachFilter){
-                          return DropdownMenuEntry(value: eachFilter, label: eachFilter);
-                        }).toList()*/),
-                      ],
+                    Text(
+                      "Morning",
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
-                    SizedBox(
-                      height: 21,
-                    ),
-                    BlocBuilder<ExpenseBloc, ExpenseState>(
-                      builder: (_, state) {
-                        if (state is ExpenseLoadingState) {
-                          return Center(child: CircularProgressIndicator());
-                        }
-
-                        if (state is ExpenseLoadedState) {
-                          return ListView.builder(
-                            padding: EdgeInsets.zero,
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            itemCount: state.mExpense.length,
-                            itemBuilder: (_, index) {
-                              ExpenseFilterModel eachFilterExp =
-                                  state.mExpense[index];
-                              return Container(
-                                margin: EdgeInsets.only(bottom: 11),
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.black12),
-                                  borderRadius: BorderRadius.circular(11),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(11.0),
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            eachFilterExp.type,
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          Text(
-                                            "₹${eachFilterExp.totalAmt.toString()}",
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      SizedBox(height: 11),
-                                      Divider(height: 1, color: Colors.black12),
-                                      ListView.builder(
-                                        padding: EdgeInsets.zero,
-                                        physics: NeverScrollableScrollPhysics(),
-                                        shrinkWrap: true,
-                                        itemCount:
-                                            eachFilterExp.allExpenses.length,
-                                        itemBuilder: (_, childIndex) {
-                                          String imgPath = AppConstants
-                                              .mCategories
-                                              .firstWhere((e) {
-                                                return e["id"] ==
-                                                    eachFilterExp
-                                                        .allExpenses[childIndex][DBHelper
-                                                        .COLUMN_EXPENSE_CAT_ID];
-                                              })["imgPath"];
-
-                                          return ListTile(
-                                            leading: Container(
-                                              width: 40,
-                                              height: 40,
-                                              decoration: BoxDecoration(
-                                                color: Colors
-                                                    .primaries[Random().nextInt(
-                                                      Colors.primaries.length,
-                                                    )]
-                                                    .shade100,
-                                                borderRadius:
-                                                    BorderRadius.circular(7),
-                                              ),
-                                              child: Center(
-                                                child: Padding(
-                                                  padding: const EdgeInsets.all(
-                                                    5.0,
-                                                  ),
-                                                  child: Image.asset(imgPath),
-                                                ),
-                                              ),
-                                            ),
-                                            title: Text(
-                                              eachFilterExp
-                                                  .allExpenses[childIndex][DBHelper
-                                                  .COLUMN_EXPENSE_TITLE],
-                                            ),
-                                            subtitle: Text(
-                                              eachFilterExp
-                                                  .allExpenses[childIndex][DBHelper
-                                                  .COLUMN_EXPENSE_REMARK],
-                                            ),
-                                            trailing: Text(
-                                              "₹ ${eachFilterExp.allExpenses[childIndex][DBHelper.COLUMN_EXPENSE_AMOUNT]}",
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        }
-
-                        if (state is ExpenseErrorState) {
-                          return Center(child: Text(state.errorMsg));
-                        }
-
-                        return Container();
-                      },
+                    Text(
+                      "Blakowski",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ],
                 ),
+                Spacer(),
+                DropdownMenu(
+                    onSelected: (value){
+                      context.read<ExpenseBloc>().add(FetchInitialExpenseEvent(filterFlag: value??1));
+                    },
+                    trailingIcon: Icon(Icons.keyboard_arrow_down_rounded),
+                    inputDecorationTheme: InputDecorationThemeData(
+                        filled: true,
+                        fillColor: Color(0xffEEF2FD),
+                        border: OutlineInputBorder(
+                            borderSide: BorderSide.none
+                        )
+                    ),
+                    initialSelection: filterIndex,
+                    dropdownMenuEntries: List.generate(mFilters.length, (index){
+                      return DropdownMenuEntry(value: index+1, label: mFilters[index]);
+                    })
+
+
+                  /*mFilters.map((eachFilter){
+                          return DropdownMenuEntry(value: eachFilter, label: eachFilter);
+                        }).toList()*/),
+              ],
+            ),
+            SizedBox(
+              height: 21,
+            ),
+            Container(
+              padding: EdgeInsets.all(21),
+              decoration: BoxDecoration(
+                color: Color(0xff6674D3),
+                borderRadius: BorderRadius.circular(21),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Total Expense',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                  BlocBuilder<UserBloc, UserState>(
+                    builder: (context, state) {
+                      if(state is UserBalanceState){
+                        return RichText(
+                          text: TextSpan(
+                            text: "₹${state.bal}",
+                            style: TextStyle(
+                              fontSize: 43,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        );
+                      }
+                      return RichText(
+                        text: TextSpan(
+                          text: "₹0",
+                          style: TextStyle(
+                            fontSize: 43,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      );
+                    }
+                  ),
+                  SizedBox(height: 11),
+                  /*LinearProgressIndicator(
+                      minHeight: 6,
+                      borderRadius: BorderRadius.circular(21),
+                      backgroundColor: Color(0xff5969BC),
+                      color: Color(0xffEBC696),
+                      value: 3734/4000,
+                    ),*/
+                  Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Text("+₹2400", style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),),
+                      ),
+                      Text("  than last month", style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.white54,
+                      )),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              height: 21,
+            ),
+            Expanded(
+              child: BlocBuilder<ExpenseBloc, ExpenseState>(
+                builder: (_, state) {
+                  if (state is ExpenseLoadingState) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+
+                  if (state is ExpenseLoadedState) {
+                    return state.mExpense.isNotEmpty ? ListView.builder(
+                      padding: EdgeInsets.zero,
+                      shrinkWrap: true,
+                      itemCount: state.mExpense.length,
+                      itemBuilder: (_, index) {
+                        ExpenseFilterModel eachFilterExp =
+                            state.mExpense[index];
+                        return Container(
+                          margin: EdgeInsets.only(bottom: 11),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black12),
+                            borderRadius: BorderRadius.circular(11),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(11.0),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      eachFilterExp.type,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      "₹${eachFilterExp.totalAmt.toString()}",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 11),
+                                Divider(height: 1, color: Colors.black12),
+                                ListView.builder(
+                                  padding: EdgeInsets.zero,
+                                  physics: NeverScrollableScrollPhysics(),
+                                  shrinkWrap: true,
+                                  itemCount:
+                                      eachFilterExp.allExpenses.length,
+                                  itemBuilder: (_, childIndex) {
+                                    String imgPath = AppConstants
+                                        .mCategories
+                                        .firstWhere((e) {
+                                          return e["id"] ==
+                                              eachFilterExp
+                                                  .allExpenses[childIndex][DBHelper
+                                                  .COLUMN_EXPENSE_CAT_ID];
+                                        })["imgPath"];
+
+                                    return ListTile(
+                                      leading: Container(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          color: Colors
+                                              .primaries[Random().nextInt(
+                                                Colors.primaries.length,
+                                              )]
+                                              .shade100,
+                                          borderRadius:
+                                              BorderRadius.circular(7),
+                                        ),
+                                        child: Center(
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(
+                                              5.0,
+                                            ),
+                                            child: Image.asset(imgPath),
+                                          ),
+                                        ),
+                                      ),
+                                      title: Text(
+                                        eachFilterExp
+                                            .allExpenses[childIndex][DBHelper
+                                            .COLUMN_EXPENSE_TITLE],
+                                      ),
+                                      subtitle: Text(
+                                        eachFilterExp
+                                            .allExpenses[childIndex][DBHelper
+                                            .COLUMN_EXPENSE_REMARK],
+                                      ),
+                                      trailing: Text(
+                                        "₹ ${eachFilterExp.allExpenses[childIndex][DBHelper.COLUMN_EXPENSE_AMOUNT]}",
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ) : Center(
+                      child: Text('No Expenses yet!!'),
+                    );
+                  }
+
+                  if (state is ExpenseErrorState) {
+                    return Center(child: Text(state.errorMsg));
+                  }
+
+                  return Container();
+                },
               ),
             ),
           ],
