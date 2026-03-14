@@ -1,17 +1,12 @@
+import 'package:expenso_450/data/models/expense_model.dart';
+
 abstract class ExpenseEvent {}
 
 class AddExpenseEvent extends ExpenseEvent {
-  String title, remark;
-  double amt;
-  int catId, type, created_at;
+  ExpenseModel mExp;
 
   AddExpenseEvent({
-    required this.title,
-    required this.remark,
-    required this.amt,
-    required this.catId,
-    required this.type,
-    required this.created_at,
+    required this.mExp
   });
 }
 

@@ -262,8 +262,7 @@ class _HomePageState extends State<HomePage> {
                                         .firstWhere((e) {
                                           return e["id"] ==
                                               eachFilterExp
-                                                  .allExpenses[childIndex][DBHelper
-                                                  .COLUMN_EXPENSE_CAT_ID];
+                                                  .allExpenses[childIndex].eCatId;
                                         })["imgPath"];
 
                                     return ListTile(
@@ -290,16 +289,14 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                       title: Text(
                                         eachFilterExp
-                                            .allExpenses[childIndex][DBHelper
-                                            .COLUMN_EXPENSE_TITLE],
+                                            .allExpenses[childIndex].eTitle,
                                       ),
                                       subtitle: Text(
                                         eachFilterExp
-                                            .allExpenses[childIndex][DBHelper
-                                            .COLUMN_EXPENSE_REMARK],
+                                            .allExpenses[childIndex].eRemark,
                                       ),
                                       trailing: Text(
-                                        "₹ ${eachFilterExp.allExpenses[childIndex][DBHelper.COLUMN_EXPENSE_AMOUNT]}",
+                                        "₹ ${eachFilterExp.allExpenses[childIndex].eAmt}",
                                       ),
                                     );
                                   },

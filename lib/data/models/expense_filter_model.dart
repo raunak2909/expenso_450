@@ -1,7 +1,9 @@
+import 'package:expenso_450/data/models/expense_model.dart';
+
 class ExpenseFilterModel {
   String type;
   num totalAmt;
-  List<Map<String, dynamic>> allExpenses;
+  List<ExpenseModel> allExpenses;
 
   ExpenseFilterModel({
     required this.type,

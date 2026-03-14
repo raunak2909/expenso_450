@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:expenso_450/data/models/expense_model.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,7 +34,6 @@ class DBHelper {
   static const String COLUMN_EXPENSE_AMOUNT = "e_amt";
   static const String COLUMN_EXPENSE_CAT_ID = "e_cat_id";
   static const String COLUMN_EXPENSE_TYPE = "e_type";
-
   /// 0=> Debit, 1=>Credit
   static const String COLUMN_EXPENSE_CREATED_AT = "e_created_at";
 
@@ -162,30 +162,18 @@ class DBHelper {
 
   ///add expense
   Future<bool> addExpense({
-    required String title,
-    required String remark,
-    required double amt,
-    required int catId,
-    required int type,
-    required int createdAt,
+    required ExpenseModel newExp
   }) async {
     var db = await initDB();
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int uid = prefs.getInt("uid") ?? 0;
+    newExp.uID = uid;
 
-    int rowsEffected = await db.insert(TABLE_EXPENSE, {
-      COLUMN_EXPENSE_TITLE: title,
-      COLUMN_EXPENSE_REMARK: remark,
-      COLUMN_EXPENSE_AMOUNT: amt,
-      COLUMN_EXPENSE_CAT_ID: catId,
-      COLUMN_EXPENSE_CREATED_AT: createdAt.toString(),
-      COLUMN_EXPENSE_TYPE: type,
-      COLUMN_USER_ID: uid,
-    });
+    int rowsEffected = await db.insert(TABLE_EXPENSE, newExp.toMap());
 
     if (rowsEffected > 0) {
-      bool isUpdated = await updateBalance(amt: amt, type: type);
+      bool isUpdated = await updateBalance(amt: newExp.eAmt.toDouble(), type: newExp.eType);
 
       if (isUpdated) {
         return true;
@@ -225,17 +213,26 @@ class DBHelper {
   }
 
   ///fetch all expense
-  Future<List<Map<String, dynamic>>> fetchAllExpense() async {
+  Future<List<ExpenseModel>> fetchAllExpense() async {
     var db = await initDB();
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int uid = prefs.getInt("uid") ?? 0;
 
-    return await db.query(
+    List<Map<String, dynamic>> mData = await db.query(
       TABLE_EXPENSE,
       where: "$COLUMN_USER_ID = ?",
       whereArgs: ["$uid"],
     );
+
+    List<ExpenseModel> mExpenses = [];
+
+    for(Map<String, dynamic> eachMap in mData){
+      mExpenses.add(ExpenseModel.fromMap(eachMap));
+    }
+
+    return mExpenses;
+
   }
 
   ///update expense

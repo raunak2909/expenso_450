@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+import '../../data/models/expense_model.dart';
 import '../on_boarding/bloc/user_bloc.dart';
 import '../on_boarding/bloc/user_event.dart';
 
@@ -226,12 +227,12 @@ class _AddExpensePageState extends State<AddExpensePage> {
               width: double.infinity,
               height: 55,
               child: BlocConsumer<ExpenseBloc, ExpenseState>(
-                listener: (_, state){
-                  if(state is ExpenseLoadingState){
+                listener: (_, state) {
+                  if (state is ExpenseLoadingState) {
                     isAdding = true;
                   }
 
-                  if(state is ExpenseErrorState){
+                  if (state is ExpenseErrorState) {
                     isAdding = false;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -239,10 +240,9 @@ class _AddExpensePageState extends State<AddExpensePage> {
                         backgroundColor: Colors.red,
                       ),
                     );
-
                   }
 
-                  if(state is ExpenseLoadedState){
+                  if (state is ExpenseLoadedState) {
                     isAdding = false;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -259,15 +259,20 @@ class _AddExpensePageState extends State<AddExpensePage> {
                     onPressed: () {
                       context.read<ExpenseBloc>().add(
                         AddExpenseEvent(
-                          title: titleController.text,
-                          remark: remarkController.text,
-                          amt: double.parse(amountController.text),
-                          catId: AppConstants.mCategories[selectedCatIndex]["id"],
-                          type: mType.indexWhere((element) {
-                            return element == selectedType;
-                          }),
-                          created_at: (selectedDate ?? DateTime.now())
-                              .millisecondsSinceEpoch,
+                          mExp: ExpenseModel(
+                            uID: 0,
+                            eTitle: titleController.text,
+                            eRemark: remarkController.text,
+                            eAmt: double.parse(amountController.text),
+                            eCatId: AppConstants
+                                .mCategories[selectedCatIndex]["id"],
+                            eType: mType.indexWhere((element) {
+                              return element == selectedType;
+                            }),
+                            eCreatedAt: (selectedDate ?? DateTime.now())
+                                .millisecondsSinceEpoch
+                                .toString(),
+                          ),
                         ),
                       );
                     },
@@ -278,21 +283,23 @@ class _AddExpensePageState extends State<AddExpensePage> {
                         borderRadius: BorderRadius.circular(11),
                       ),
                     ),
-                    child: isAdding ? Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(4.0),
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                          ),
-                        ),
-                        SizedBox(width: 11),
-                        Text('Adding Expense..'),
-                      ],
-                    ) : Text('Add Expense'),
+                    child: isAdding
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
+                              ),
+                              SizedBox(width: 11),
+                              Text('Adding Expense..'),
+                            ],
+                          )
+                        : Text('Add Expense'),
                   );
-                }
+                },
               ),
             ),
           ],

@@ -1,5 +1,6 @@
 import 'package:expenso_450/data/helper/db_helper.dart';
 import 'package:expenso_450/data/models/expense_filter_model.dart';
+import 'package:expenso_450/data/models/expense_model.dart';
 import 'package:expenso_450/domain/constants/app_constants.dart';
 import 'package:expenso_450/ui/add_expense/bloc/expense_event.dart';
 import 'package:expenso_450/ui/add_expense/bloc/expense_state.dart';
@@ -15,16 +16,11 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
       emit(ExpenseLoadingState());
 
       bool isExpenseAdded = await dbHelper.addExpense(
-        title: event.title,
-        remark: event.remark,
-        amt: event.amt,
-        catId: event.catId,
-        type: event.type,
-        createdAt: event.created_at,
+        newExp: event.mExp
       );
 
       if (isExpenseAdded) {
-        List<Map<String, dynamic>> allExp = await dbHelper.fetchAllExpense();
+        List<ExpenseModel> allExp = await dbHelper.fetchAllExpense();
         emit(ExpenseLoadedState(mExpense: filterExpensesByType(allExp)));
       } else {
         emit(ExpenseErrorState(errorMsg: "Something went wrong"));
@@ -34,7 +30,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     on<FetchInitialExpenseEvent>((event, emit) async {
       emit(ExpenseLoadingState());
 
-      List<Map<String, dynamic>> allExp = await dbHelper.fetchAllExpense();
+      List<ExpenseModel> allExp = await dbHelper.fetchAllExpense();
 
       emit(ExpenseLoadedState(mExpense: filterExpensesByType(allExp, flag: event.filterFlag)));
     });
@@ -45,7 +41,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   ///3->year wise
   ///4->cat wise
   List<ExpenseFilterModel> filterExpensesByType(
-      List<Map<String, dynamic>> allExp, {int flag = 1}) {
+      List<ExpenseModel> allExp, {int flag = 1}) {
     List<ExpenseFilterModel> mFilteredExpense = [];
 
     if (flag < 4) {
@@ -62,10 +58,10 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
 
       List<String> uniqueDates = [];
 
-      for (Map<String, dynamic> eachExp in allExp) {
+      for (ExpenseModel eachExp in allExp) {
         String eachDate = df.format(
           DateTime.fromMillisecondsSinceEpoch(
-            int.parse(eachExp[DBHelper.COLUMN_EXPENSE_CREATED_AT]),
+            int.parse(eachExp.eCreatedAt),
           ),
         );
 
@@ -76,22 +72,22 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
 
       for (String eachDate in uniqueDates) {
         num totalAmt = 0;
-        List<Map<String, dynamic>> eachDateExpenses = [];
+        List<ExpenseModel> eachDateExpenses = [];
 
-        for (Map<String, dynamic> eachExp in allExp) {
+        for (ExpenseModel eachExp in allExp) {
           String eachExpDate = df.format(
             DateTime.fromMillisecondsSinceEpoch(
-              int.parse(eachExp[DBHelper.COLUMN_EXPENSE_CREATED_AT]),
+              int.parse(eachExp.eCreatedAt),
             ),
           );
 
           if (eachDate == eachExpDate) {
             eachDateExpenses.add(eachExp);
 
-            if (eachExp[DBHelper.COLUMN_EXPENSE_TYPE] == 0) {
-              totalAmt -= eachExp[DBHelper.COLUMN_EXPENSE_AMOUNT];
+            if (eachExp.eType == 0) {
+              totalAmt -= eachExp.eAmt;
             } else {
-              totalAmt += eachExp[DBHelper.COLUMN_EXPENSE_AMOUNT];
+              totalAmt += eachExp.eAmt;
             }
           }
         }
@@ -109,15 +105,15 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
 
       for (Map<String, dynamic> eachCat in AppConstants.mCategories) {
         num totalAmt = 0;
-        List<Map<String, dynamic>> eachCatExpenses = [];
+        List<ExpenseModel> eachCatExpenses = [];
 
-        for (Map<String, dynamic> eachExp in allExp) {
-          if (eachCat["id"] == eachExp[DBHelper.COLUMN_EXPENSE_CAT_ID]) {
+        for (ExpenseModel eachExp in allExp) {
+          if (eachCat["id"] == eachExp.eCatId) {
             eachCatExpenses.add(eachExp);
-            if (eachExp[DBHelper.COLUMN_EXPENSE_TYPE] == 0) {
-              totalAmt -= eachExp[DBHelper.COLUMN_EXPENSE_AMOUNT];
+            if (eachExp.eType == 0) {
+              totalAmt -= eachExp.eAmt;
             } else {
-              totalAmt += eachExp[DBHelper.COLUMN_EXPENSE_AMOUNT];
+              totalAmt += eachExp.eAmt;
             }
           }
         }
